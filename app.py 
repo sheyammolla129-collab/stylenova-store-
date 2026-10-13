@@ -1,0 +1,401 @@
+
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+PRODUCTS = [
+    {
+        "name": "Classic T-Shirt",
+        "category": "Men",
+        "price": 550,
+        "emoji": "👕",
+        "color": "#eee7ff"
+    },
+    {
+        "name": "Elegant Dress",
+        "category": "Women",
+        "price": 1250,
+        "emoji": "👗",
+        "color": "#ffe8f3"
+    },
+    {
+        "name": "Casual Hoodie",
+        "category": "Men",
+        "price": 1100,
+        "emoji": "🧥",
+        "color": "#e4eaff"
+    },
+    {
+        "name": "Fashion Bag",
+        "category": "Accessories",
+        "price": 850,
+        "emoji": "👜",
+        "color": "#fff0d9"
+    },
+    {
+        "name": "Stylish Shoes",
+        "category": "Accessories",
+        "price": 1450,
+        "emoji": "👟",
+        "color": "#e5f7ed"
+    },
+    {
+        "name": "Ladies Top",
+        "category": "Women",
+        "price": 750,
+        "emoji": "👚",
+        "color": "#f9e6ff"
+    }
+]
+
+# নিজের WhatsApp নম্বর country code-সহ লিখবে।
+# উদাহরণ: বাংলাদেশের নম্বর 01XXXXXXXXX হলে
+# শুরুতে 0 বাদ দিয়ে 880 যোগ করবে।
+WHATSAPP_NUMBER = "8801959308492"
+
+PAGE = """
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+ content="width=device-width, initial-scale=1.0">
+
+<title>STYLE NOVA | Fashion Store</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: Arial, sans-serif;
+    background: #faf8ff;
+    color: #27213b;
+    line-height: 1.6;
+}
+
+header {
+    background: white;
+    padding: 15px 6%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 2px 12px #27134c10;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 900;
+    color: #7029c4;
+    letter-spacing: 1px;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+nav a {
+    text-decoration: none;
+    color: #393047;
+    font-size: 14px;
+}
+
+nav a:hover { color: #7029c4; }
+
+.hero {
+    padding: 65px 7%;
+    text-align: center;
+    color: white;
+    background: linear-gradient(135deg, #51208e, #9a55df);
+}
+
+.hero .tag {
+    display: inline-block;
+    border: 1px solid #ffffff80;
+    border-radius: 30px;
+    padding: 5px 15px;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
+
+.hero h1 {
+    font-size: clamp(34px, 7vw, 54px);
+    line-height: 1.2;
+    margin-bottom: 18px;
+}
+
+.hero p {
+    max-width: 550px;
+    margin: 0 auto 25px;
+}
+
+.btn {
+    display: inline-block;
+    background: white;
+    color: #7029c4;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn:hover { opacity: .9; }
+
+.section {
+    padding: 48px 6%;
+}
+
+.section-title {
+    text-align: center;
+    color: #54218e;
+    font-size: 29px;
+    margin-bottom: 8px;
+}
+
+.section-desc {
+    text-align: center;
+    color: #777084;
+    margin-bottom: 25px;
+}
+
+.filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.filter {
+    border: 1px solid #d8c7f2;
+    background: white;
+    color: #61269e;
+    border-radius: 25px;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.filter.active {
+    background: #7029c4;
+    color: white;
+}
+
+.products {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(145px, 1fr));
+    gap: 17px;
+    max-width: 1100px;
+    margin: auto;
+}
+
+.product {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px #35115b0d;
+    border: 1px solid #eee7f8;
+}
+
+.product-art {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 67px;
+}
+
+.product-info { padding: 14px; }
+
+.product-info h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.category {
+    color: #8a7b9e;
+    font-size: 12px;
+}
+
+.price {
+    color: #7029c4;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 8px 0 12px;
+}
+
+.order {
+    display: block;
+    text-align: center;
+    padding: 9px 5px;
+    border-radius: 8px;
+    background: #7029c4;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.about {
+    max-width: 700px;
+    text-align: center;
+    margin: auto;
+}
+
+.contact {
+    background: #eee5ff;
+    text-align: center;
+}
+
+footer {
+    background: #32144f;
+    color: white;
+    padding: 22px 12px;
+    text-align: center;
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    header { justify-content: center; }
+    nav { justify-content: center; }
+    .hero { padding: 52px 18px; }
+    .section { padding: 38px 15px; }
+    .products {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .product-art { min-height: 125px; font-size: 56px; }
+    .product-info { padding: 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">STYLE NOVA</div>
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#shop">Shop</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+    </nav>
+</header>
+
+<section class="hero" id="home">
+    <span class="tag">NEW COLLECTION</span>
+    <h1>Discover Your<br>Unique Style</h1>
+    <p>
+        আধুনিক ফ্যাশন, সুন্দর ডিজাইন এবং
+        তোমার পছন্দের স্টাইল এক জায়গায়।
+    </p>
+    <a href="#shop" class="btn">Explore Collection →</a>
+</section>
+
+<section class="section" id="shop">
+    <h2 class="section-title">Our Collection</h2>
+    <p class="section-desc">
+        তোমার পছন্দের ফ্যাশন আইটেম বেছে নাও।
+    </p>
+
+    <div class="filters">
+        <button class="filter active" onclick="filterProducts('All', this)">All</button>
+        <button class="filter" onclick="filterProducts('Men', this)">Men</button>
+        <button class="filter" onclick="filterProducts('Women', this)">Women</button>
+        <button class="filter" onclick="filterProducts('Accessories', this)">Accessories</button>
+    </div>
+
+    <div class="products">
+        {% for p in products %}
+        <article class="product" data-category="{{ p.category }}">
+            <div class="product-art"
+                 style="background:{{ p.color }}">
+                {{ p.emoji }}
+            </div>
+            <div class="product-info">
+                <span class="category">{{ p.category }}</span>
+                <h3>{{ p.name }}</h3>
+                <div class="price">৳{{ p.price }}</div>
+                <a class="order"
+                   href="https://wa.me/{{ whatsapp }}?text={{ ('Hello STYLE NOVA! I want to order ' ~ p.name ~ ' for Tk ' ~ p.price)|urlencode }}"
+                   target="_blank"
+                   rel="noopener">
+                    Order on WhatsApp
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section" id="about">
+    <h2 class="section-title">About STYLE NOVA</h2>
+    <div class="about">
+        <p>
+            STYLE NOVA একটি ফ্যাশন স্টোরের ওয়েবসাইট
+            ডিজাইন। এখানে পোশাক ও অ্যাকসেসরিজের
+            কালেকশন সুন্দরভাবে দেখানো হয়।
+            নিজের ব্যবসার তথ্য দিয়ে এটি কাস্টমাইজ করো।
+        </p>
+    </div>
+</section>
+
+<section class="section contact" id="contact">
+    <h2 class="section-title">Get In Touch</h2>
+    <p>তোমার পছন্দের পণ্য অর্ডার করতে WhatsApp ব্যবহার করো।</p>
+    <br>
+    <a class="btn"
+       href="https://wa.me/{{ whatsapp }}"
+       target="_blank"
+       rel="noopener">
+       Contact Us
+    </a>
+</section>
+
+<footer>
+    © 2026 STYLE NOVA. All rights reserved.
+</footer>
+
+<script>
+function filterProducts(category, button) {
+    document.querySelectorAll(".filter").forEach(function(btn) {
+        btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    document.querySelectorAll(".product").forEach(function(product) {
+        if (category === "All" ||
+            product.dataset.category === category) {
+            product.style.display = "";
+        } else {
+            product.style.display = "none";
+        }
+    });
+}
+</script>
+
+</body>
+</html>
+"""
+
+@app.route("/")
+def home():
+    return render_template_string(
+        PAGE,
+        products=PRODUCTS,
+        whatsapp=WHATSAPP_NUMBER
+    )
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=False)
